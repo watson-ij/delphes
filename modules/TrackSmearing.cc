@@ -157,8 +157,8 @@ void TrackSmearing::Process()
   Int_t iCandidate = 0;
   TLorentzVector beamSpotPosition;
   Candidate *candidate, *mother;
-  Double_t pt, eta, e, d0, d0Error, trueD0, dz, dzError, trueDZ, p, pError, trueP, ctgTheta, ctgThetaError, trueCtgTheta, phi, phiError, truePhi;
-  Double_t x, y, z, t, px, py, pz, theta;
+  Double_t pt, eta, d0, d0Error, trueD0, dz, dzError, trueDZ, p, pError, trueP, ctgTheta, ctgThetaError, trueCtgTheta, phi, phiError, truePhi;
+  Double_t x, y, z, t, px, py, pz;//, theta;
   Double_t q, r;
   Double_t x_c, y_c, r_c, phi_0;
   Double_t rcu, rc2, xd, yd, zd;
@@ -222,8 +222,7 @@ void TrackSmearing::Process()
 
     pt = momentum.Pt();
     eta = momentum.Eta();
-    e = momentum.E();
-    
+
     d0 = trueD0 = candidate->D0;
     dz = trueDZ = candidate->DZ;
 
@@ -232,7 +231,7 @@ void TrackSmearing::Process()
     phi = truePhi = candidate->Phi;
 
     if(fUseD0Formula)
-      d0Error = fD0Formula->Eval(pt, eta, phi, e, candidate);
+      d0Error = fD0Formula->Eval(pt, eta);
     else
     {
       Int_t xbin, ybin;
@@ -247,7 +246,7 @@ void TrackSmearing::Process()
       continue;
 
     if(fUseDZFormula)
-      dzError = fDZFormula->Eval(pt, eta, phi, e, candidate);
+      dzError = fDZFormula->Eval(pt, eta);
     else
     {
       Int_t xbin, ybin;
@@ -261,8 +260,9 @@ void TrackSmearing::Process()
     if(dzError < 0.0)
       continue;
 
-    if(fUsePFormula)
-      pError = fPFormula->Eval(pt, eta, phi, e, candidate) * p;
+    if(fUsePFormula) {
+      pError = fPFormula->Eval(pt, eta) * p;
+    }
     else
     {
       Int_t xbin, ybin;
@@ -270,14 +270,15 @@ void TrackSmearing::Process()
       xbin = pt < pErrorHist->GetXaxis()->GetXmax() ? pErrorHist->GetXaxis()->FindBin(pt) : pErrorHist->GetXaxis()->GetBinCenter(pErrorHist->GetXaxis()->GetNbins());
       ybin = pErrorHist->GetYaxis()->FindBin(TMath::Abs(eta));
       pError = pErrorHist->GetBinContent(xbin, ybin) * p;
-      if(!pError)
+      if(!pError) {
         pError = -1.0;
+      }
     }
     if(pError < 0.0)
       continue;
 
     if(fUseCtgThetaFormula)
-      ctgThetaError = fCtgThetaFormula->Eval(pt, eta, phi, e, candidate);
+      ctgThetaError = fCtgThetaFormula->Eval(pt, eta);
     else
     {
       Int_t xbin, ybin;
@@ -292,7 +293,7 @@ void TrackSmearing::Process()
       continue;
 
     if(fUsePhiFormula)
-      phiError = fPhiFormula->Eval(pt, eta, phi, e, candidate);
+      phiError = fPhiFormula->Eval(pt, eta);
     else
     {
       Int_t xbin, ybin;
@@ -323,16 +324,16 @@ void TrackSmearing::Process()
     candidate = static_cast<Candidate *>(candidate->Clone());
     candidate->D0 = d0;
     candidate->DZ = dz;
-    candidate->P = p;
-    candidate->CtgTheta = ctgTheta;
-    candidate->Phi = phi;
+    //candidate->P = p;
+    //candidate->CtgTheta = ctgTheta;
+    //candidate->Phi = phi;
 
-    theta = TMath::ACos(ctgTheta / TMath::Sqrt(1.0 + ctgTheta * ctgTheta));
-    candidate->Momentum.SetPx(p * TMath::Cos(phi) * TMath::Sin(theta));
-    candidate->Momentum.SetPy(p * TMath::Sin(phi) * TMath::Sin(theta));
-    candidate->Momentum.SetPz(p * TMath::Cos(theta));
-    candidate->Momentum.SetE(candidate->Momentum.Pt() * TMath::CosH(eta));
-    candidate->PT = candidate->Momentum.Pt();
+    //theta = TMath::ACos(ctgTheta / TMath::Sqrt(1.0 + ctgTheta * ctgTheta));
+    //candidate->Momentum.SetPx(p * TMath::Cos(phi) * TMath::Sin(theta));
+    //candidate->Momentum.SetPy(p * TMath::Sin(phi) * TMath::Sin(theta));
+    //candidate->Momentum.SetPz(p * TMath::Cos(theta));
+    //candidate->Momentum.SetE(candidate->Momentum.Pt() * TMath::CosH(eta));
+    //candidate->PT = candidate->Momentum.Pt();
 
     x = position.X();
     y = position.Y();
@@ -387,11 +388,11 @@ void TrackSmearing::Process()
     {
       candidate->ErrorD0 = d0Error;
       candidate->ErrorDZ = dzError;
-      candidate->ErrorP = pError;
-      candidate->ErrorCtgTheta = ctgThetaError;
-      candidate->ErrorPhi = phiError;
-      candidate->ErrorPT = ptError(p, ctgTheta, pError, ctgThetaError);
-      candidate->TrackResolution = pError / p;
+      //candidate->ErrorP = pError;
+      //candidate->ErrorCtgTheta = ctgThetaError;
+      //candidate->ErrorPhi = phiError;
+      //candidate->ErrorPT = ptError(p, ctgTheta, pError, ctgThetaError);
+      //candidate->TrackResolution = pError / p;
     }
 
     candidate->AddCandidate(mother);
